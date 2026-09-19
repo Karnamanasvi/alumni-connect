@@ -41,7 +41,8 @@ const allowedOrigins = [
   'http://localhost:5175',
   'http://localhost:3000',
   'https://alumni-connect-frontendd.vercel.app',
-  'https://alumni-connect-frontend.vercel.app'
+  'https://alumni-connect-frontend.vercel.app',
+  'https://alumni-connect-roan.vercel.app'
 ];
 
 const io = socketIo(server, {
