@@ -3,7 +3,7 @@
 > A full-stack Node + React application built to strengthen connections between alumni and current students through mentorship and opportunities.
 
 ## 🔗 Links
-- **Live Demo**: [https://alumni-connect-frontendd.vercel.app](https://alumni-connect-frontendd.vercel.app)
+- **Live Demo**: [https://alumni-connect-roan.vercel.app/](https://alumni-connect-roan.vercel.app/)
 
 ## Overview
 
