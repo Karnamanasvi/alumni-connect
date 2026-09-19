@@ -1,0 +1,88 @@
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { AuthProvider, useAuth } from './context/AuthContext';
+import { ThemeProvider } from './context/ThemeContext';
+import { SocketProvider } from './context/SocketContext';
+import { ToastProvider } from './context/ToastContext';
+
+import NavBar from './components/NavBar';
+import Footer from './components/Footer';
+import ToastContainer from './components/ToastContainer';
+import Home from './pages/Home';
+import Gallery from './pages/Gallery';
+import Events from './pages/Events';
+import AlumniPage from './pages/Alumni';
+import Opportunities from './pages/Opportunities';
+import AuthPage from './pages/AuthPage';
+import Profile from './pages/Profile';
+import ChatPage from './pages/ChatPage';
+import AdminDashboard from './pages/AdminDashboard';
+
+import './styles/common.css';
+
+function PrivateRoute({ children }) {
+  const { user, loading } = useAuth();
+
+  if (loading) return <div className="flex items-center justify-center min-h-[200px]">Loading...</div>;
+  return user ? children : <Navigate to="/auth" replace />;
+}
+
+export default function App() {
+  return (
+    <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
+      <ThemeProvider>
+        <ToastProvider>
+          <AuthProvider>
+            <SocketProvider>
+              <div className="flex flex-col min-h-screen">
+                <NavBar />
+                <main className="flex-grow w-full max-w-6xl px-4 py-8 mx-auto">
+                  <Routes>
+                    <Route path="/" element={<Home />} />
+                    <Route path="/gallery" element={<Gallery />} />
+                    <Route path="/events" element={<Events />} />
+                    <Route path="/alumni" element={<AlumniPage />} />
+                    <Route path="/opportunities" element={<Opportunities />} />
+                    <Route path="/auth" element={<AuthPage />} />
+
+                    <Route
+                      path="/profile"
+                      element={
+                        <PrivateRoute>
+                          <Profile />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/chat"
+                      element={
+                        <PrivateRoute>
+                          <ChatPage />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    <Route
+                      path="/admin"
+                      element={
+                        <PrivateRoute>
+                          <AdminDashboard />
+                        </PrivateRoute>
+                      }
+                    />
+
+                    <Route path="*" element={<Navigate to="/" replace />} />
+                  </Routes>
+                </main>
+                <Footer />
+                <ToastContainer />
+              </div>
+            </SocketProvider>
+          </AuthProvider>
+        </ToastProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  );
+}
+

@@ -1,0 +1,304 @@
+const bcrypt = require("bcrypt");
+const jwt = require("jsonwebtoken");
+const logger = require("../utils/logger");
+const userModel = require("../models/user.model");
+
+async function registerUser(req, res, next) {
+  try {
+    const {
+      role, name,
+      email, password, courseStudied,
+      company,
+      graduationYear,
+      yearOfStudying,
+      yearOfStudy,
+      course,
+    } = req.body;
+    // If attempting to create an admin, allow only when requester is an authenticated admin
+    if (role === 'admin') {
+      // Try to get token from Authorization header or cookies
+      let requesterToken = null
+      if (req.headers.authorization && req.headers.authorization.startsWith('Bearer ')) {
+        requesterToken = req.headers.authorization.split(' ')[1]
+      } else if (req.cookies && req.cookies.token) {
+        requesterToken = req.cookies.token
+      }
+
+      if (!requesterToken) {
+        logger.warn(`Blocked unauthenticated admin registration attempt for email: ${email}`)
+        return res.status(403).json({ message: 'Cannot register admin via public endpoint' })
+      }
+
+      try {
+        const decoded = jwt.verify(requesterToken, process.env.JWT_SECRET)
+        const requester = await userModel.findById(decoded.id)
+        if (!requester || requester.role !== 'admin') {
+          logger.warn(`Blocked non-admin user from creating admin: ${decoded.id}`)
+          return res.status(403).json({ message: 'Only admins can create admin accounts' })
+        }
+      } catch (err) {
+        logger.warn('Failed admin auth check during registration', err && err.message)
+        return res.status(403).json({ message: 'Cannot register admin via public endpoint' })
+      }
+    }
+
+    let existingUser = await userModel.findOne({ email });
+    if (existingUser) {
+      logger.warn(`Registration attempt with existing email: ${email}`);
+      return res.status(400).json({
+        message: "User already exists",
+        errors: [{ field: "email", message: "Email already registered" }]
+      });
+    }
+
+    const hashedPassword = await bcrypt.hash(password, 12);
+
+    // Compute student "yearOfStudying" (1-5) when frontend provides a full admission year
+    let resolvedYearOfStudying = undefined;
+    if (role === 'student') {
+      if (typeof yearOfStudying === 'number' && !Number.isNaN(yearOfStudying)) {
+        resolvedYearOfStudying = yearOfStudying;
+      } else if (yearOfStudy) {
+        const admYear = Number(yearOfStudy);
+        if (!Number.isNaN(admYear)) {
+          const currentYear = new Date().getFullYear();
+          // Year in course: currentYear - admissionYear + 1
+          let calc = currentYear - admYear + 1;
+          if (calc < 1) calc = 1;
+          if (calc > 5) calc = 5;
+          resolvedYearOfStudying = calc;
+        }
+      }
+
+    }
+
+    const user = await userModel.create({
+      role,
+      name,
+      email,
+      password: hashedPassword,
+      courseStudied: role === "alumni" ? courseStudied : undefined,
+      company: role === "alumni" ? company : undefined,
+      graduationYear: role === "alumni" ? graduationYear : undefined,
+      yearOfStudying: role === "student" ? resolvedYearOfStudying : undefined,
+      course: role === "student" ? course : undefined,
+      expertise: req.body.expertise || '',
+      skills: Array.isArray(req.body.skills) ? req.body.skills : (req.body.skills ? req.body.skills.split(',').map((item) => item.trim()).filter(Boolean) : []),
+      bio: req.body.bio || '',
+      mentorAvailable: req.body.mentorAvailable === true || req.body.mentorAvailable === 'true',
+      mentorshipTopics: Array.isArray(req.body.mentorshipTopics) ? req.body.mentorshipTopics : (req.body.mentorshipTopics ? req.body.mentorshipTopics.split(',').map((item) => item.trim()).filter(Boolean) : []),
+    });
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }
+    );
+    
+    // IF an admin is creating this account, DO NOT issue a new token/cookie
+    // This prevents the current admin from being logged out
+    const isRequesterAdmin = role === 'admin'; 
+
+    if (!isRequesterAdmin) {
+      res.cookie("token", token, {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === 'production',
+        sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+        maxAge: 7 * 24 * 60 * 60 * 1000
+      });
+    }
+
+    res.status(201).json({
+      message: isRequesterAdmin ? "Admin account created successfully" : "User registered successfully",
+      token: isRequesterAdmin ? undefined : token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    logger.error(`Registration error: ${err.message}`);
+    next(err);
+  }
+}
+
+async function loginUser(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
+          details: [{ field: "email", message: "Invalid email or password" }]
+        }
+      });
+    }
+
+    const isPasswordValid = await bcrypt.compare(password, user.password);
+    if (!isPasswordValid) {
+      return res.status(401).json({
+        success: false,
+        message: "Invalid email or password",
+        error: {
+          code: "INVALID_CREDENTIALS",
+          message: "Invalid email or password",
+          details: [{ field: "password", message: "Invalid email or password" }]
+        }
+      });
+    }
+
+    const token = jwt.sign(
+      {
+        id: user._id,
+        role: user.role,
+        email: user.email,
+        name: user.name
+      },
+      process.env.JWT_SECRET,
+      { expiresIn: "7d" }  
+    );
+    
+    res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax',
+      maxAge: 7 * 24 * 60 * 60 * 1000
+    });
+
+    res.status(200).json({
+      message: "Login successful",
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role
+      }
+    });
+  } catch (err) {
+    logger.error(`Login error: ${err.message}`);
+    next(err);
+  }
+}
+
+function logoutUser(req, res) {
+  res.clearCookie("token", {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'None' : 'Lax'
+  });
+  
+  logger.info(`User logged out: ${req.user?.id}`);
+  
+  res.status(200).json({
+    message: "Logged out successfully"
+  });
+}
+
+async function meUser(req, res, next) {
+  try {
+    const id = (req.user && (req.user.id || req.user._id)) || null;
+    if (!id) {
+      return res.status(401).json({ 
+        message: 'Authentication required'
+      });
+    }
+
+    const user = await userModel.findById(id).select('-password');
+    if (!user) {
+      logger.warn(`User not found: ${id}`);
+      return res.status(404).json({ 
+        message: 'User not found'
+      });
+    }
+
+    res.json(user);
+  } catch (err) {
+    logger.error(`Error fetching user profile: ${err.message}`);
+    next(err);
+  }
+}
+
+async function forgotPassword(req, res, next) {
+  try {
+    const { email } = req.body;
+    if (!email) return res.status(400).json({ message: 'Email is required' });
+
+    const user = await userModel.findOne({ email });
+    if (!user) {
+      return res.status(200).json({ message: 'If email exists, a reset code has been sent' });
+    }
+
+    // Generate 6-digit numeric code
+    const resetCode = Math.floor(100000 + Math.random() * 900000).toString();
+    
+    // Store in DB with 15-minute expiration
+    user.resetCode = resetCode;
+    user.resetCodeExpires = new Date(Date.now() + 15 * 60 * 1000);
+    await user.save();
+
+    logger.info(`Reset code generated for user ${user._id}: ${resetCode}`);
+    
+    const { sendResetEmail } = require('../utils/mail');
+    await sendResetEmail(user.email, resetCode);
+
+    res.status(200).json({
+      message: 'A 6-digit recovery code has been sent to your email address.'
+    });
+  } catch (err) {
+    logger.error(`Forgot password error: ${err.message}`);
+    next(err);
+  }
+}
+
+async function resetPassword(req, res, next) {
+  try {
+    const { email, resetCode, newPassword } = req.body;
+
+    if (!email || !resetCode || !newPassword) {
+      return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    const user = await userModel.findOne({ 
+      email, 
+      resetCode,
+      resetCodeExpires: { $gt: Date.now() }
+    });
+
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid or expired reset code' });
+    }
+
+    // Update password and clear reset fields
+    user.password = await bcrypt.hash(newPassword, 12);
+    user.resetCode = null;
+    user.resetCodeExpires = null;
+    await user.save();
+
+    logger.info(`Password reset successful for user: ${user._id}`);
+    res.status(200).json({ message: 'Password reset successfully' });
+  } catch (err) {
+    logger.error(`Reset password error: ${err.message}`);
+    next(err);
+  }
+}
+
+module.exports = {
+  registerUser,
+  loginUser,
+  logoutUser,
+  meUser,
+  forgotPassword,
+  resetPassword
+};
