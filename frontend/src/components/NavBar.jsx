@@ -25,7 +25,7 @@ export default function NavBar() {
         {/* Logo */}
         <Link to="/" className="flex flex-shrink-0 items-center gap-2 text-sm font-semibold tracking-tight text-primary sm:text-base">
           <img src="/MGM-logo.jpg" alt="MGM College of Engineering logo" className="h-8 w-8 rounded-lg object-cover" />
-          <span className="text-text-primary">MGM Alumni Portal</span>
+          <span className="text-text-primary">SVECW Alumni Portal</span>
         </Link>
 
         {/* Desktop Nav */}
