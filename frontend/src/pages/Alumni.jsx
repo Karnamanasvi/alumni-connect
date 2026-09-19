@@ -63,7 +63,7 @@ export default function AlumniPage() {
   return (
     <div className="section-container">
       <SectionHeader
-        eyebrow="MGM Alumni Directory"
+        eyebrow="SVECW Alumni Directory"
         title="Find the right alumni connection"
         description="Search by name, company, batch, or location to discover professionals who can guide you next."
         align="center"

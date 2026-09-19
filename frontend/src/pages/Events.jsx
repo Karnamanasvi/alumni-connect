@@ -56,7 +56,7 @@ export default function Events() {
   return (
     <div className="section-container">
       <SectionHeader
-        eyebrow="MGM Events"
+        eyebrow="SVECW Events"
         title="Upcoming campus and alumni events"
         description="Join workshops, alumni meets, and networking sessions designed to keep the community connected."
         align="center"
@@ -148,7 +148,7 @@ export default function Events() {
               key={e._id}
               event={{
                 ...e,
-                location: e.location || 'Seminar Hall, MGM Campus',
+                location: e.location || 'Seminar Hall, SVECW Campus',
                 eventTime: e.eventTime || '10:30 AM · 2 hours',
                 category: e.category || 'Alumni Event',
               }}
@@ -192,7 +192,7 @@ export default function Events() {
         >
           <p>{selectedEvent.description}</p>
           <div className="mt-4 space-y-2">
-            <div>Venue: Seminar Hall, MGM Campus</div>
+            <div>Venue: Seminar Hall, SVECW Campus</div>
             <div>Time: 10:30 AM · 2 hours</div>
             <div>Attendees: {selectedEvent.attendees?.length || 0} registered</div>
           </div>

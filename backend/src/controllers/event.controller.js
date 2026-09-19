@@ -38,7 +38,7 @@ async function createEvent(req, res) {
       title,
       description: description || '',
       eventDate: parsedDate,
-      location: location || 'Seminar Hall, MGM Campus',
+      location: location || 'Seminar Hall, SVECW Campus',
       eventTime: eventTime || '10:30 AM · 2 hours',
       category: category || 'Alumni Event',
       createdBy: req.user._id

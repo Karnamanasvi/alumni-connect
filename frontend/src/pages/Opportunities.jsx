@@ -61,7 +61,7 @@ export default function Opportunities() {
   return (
     <div className="section-container">
       <SectionHeader
-        eyebrow="MGM Opportunities"
+        eyebrow="SVECW Opportunities"
         title="Career openings shared by alumni"
         description="Browse internships and full-time roles posted by graduates who want to support the next batch."
         align="center"

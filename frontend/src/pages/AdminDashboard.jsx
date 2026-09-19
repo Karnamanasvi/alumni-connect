@@ -325,7 +325,7 @@ function UsersTab({ users, reload, success, error }) {
 
 /* ── EVENTS ── */
 function EventsTab({ events, reload, success, error }) {
-  const [form, setForm] = useState({ title:'', eventDate:'', description:'', location:'Seminar Hall, MGM Campus', eventTime:'10:30 AM · 2 hours', category:'Alumni Event' });
+  const [form, setForm] = useState({ title:'', eventDate:'', description:'', location:'Seminar Hall, SVECW Campus', eventTime:'10:30 AM · 2 hours', category:'Alumni Event' });
   const [showForm, setShowForm] = useState(false);
   const [loading, setLoading] = useState(false);
 
@@ -355,12 +355,12 @@ function EventsTab({ events, reload, success, error }) {
         title: form.title.trim(),
         description: form.description?.trim() || '',
         eventDate,
-        location: form.location?.trim() || 'Seminar Hall, MGM Campus',
+        location: form.location?.trim() || 'Seminar Hall, SVECW Campus',
         eventTime: form.eventTime?.trim() || '10:30 AM · 2 hours',
         category: form.category?.trim() || 'Alumni Event',
       });
       success('Event created!');
-      setForm({ title:'', eventDate:'', description:'', location:'Seminar Hall, MGM Campus', eventTime:'10:30 AM · 2 hours', category:'Alumni Event' });
+      setForm({ title:'', eventDate:'', description:'', location:'Seminar Hall, SVECW Campus', eventTime:'10:30 AM · 2 hours', category:'Alumni Event' });
       setShowForm(false);
       reload();
     } catch (err) {
@@ -401,7 +401,7 @@ function EventsTab({ events, reload, success, error }) {
             <div className="grid grid-cols-1 gap-3 sm:grid-cols-3">
               <div>
                 <label className="form-label">Location</label>
-                <input className="text-sm form-input h-9" placeholder="Seminar Hall, MGM Campus" value={form.location} onChange={e=>setForm(p=>({...p,location:e.target.value}))} />
+                <input className="text-sm form-input h-9" placeholder="Seminar Hall, SVECW Campus" value={form.location} onChange={e=>setForm(p=>({...p,location:e.target.value}))} />
               </div>
               <div>
                 <label className="form-label">Event Time</label>
@@ -437,7 +437,7 @@ function EventsTab({ events, reload, success, error }) {
             <EventCard
               event={{
                 ...ev,
-                location: ev.location || 'Seminar Hall, MGM Campus',
+                location: ev.location || 'Seminar Hall, SVECW Campus',
                 eventTime: ev.eventTime || '10:30 AM · 2 hours',
                 category: ev.category || 'Alumni Event',
               }}

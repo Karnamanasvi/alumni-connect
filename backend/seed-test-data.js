@@ -51,7 +51,7 @@ async function seedData() {
         title: 'Alumni Networking Meet',
         description: 'A networking session where students can interact with alumni.',
         eventDate: new Date('2026-10-15'),
-        location: 'Seminar Hall, MGM Campus',
+        location: 'Seminar Hall, SVECW Campus',
         eventTime: '10:30 AM · 2 hours',
         category: 'Alumni Event'
       },
@@ -59,7 +59,7 @@ async function seedData() {
         title: 'Career Guidance Session',
         description: 'Career guidance session focused on placements and interview preparation.',
         eventDate: new Date('2026-10-20'),
-        location: 'Auditorium, MGM Campus',
+        location: 'Auditorium, SVECW Campus',
         eventTime: '11:00 AM · 2 hours',
         category: 'Career'
       },
@@ -67,7 +67,7 @@ async function seedData() {
         title: 'Technical Workshop',
         description: 'Technical workshop covering modern software development technologies.',
         eventDate: new Date('2026-10-25'),
-        location: 'Computer Lab, MGM Campus',
+        location: 'Computer Lab, SVECW Campus',
         eventTime: '10:00 AM · 3 hours',
         category: 'Workshop'
       }
